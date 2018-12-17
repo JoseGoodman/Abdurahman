@@ -1,0 +1,147 @@
+## 内部类
+
+- - 什么是内部类
+
+    ​	•	概念：在一个类的内部再定于一个完整的类
+
+    ​	•	特点：编译之后可生成字节码文件 。 
+
+    ​                内部类可直接访问外部类的私有成员，而不破坏封装。
+
+    ​                可为外部类提供必要的内部组件
+
+  - ```java
+    public calss TestMemberClass{
+        public static void main(String[] args)
+        {
+          // Inner in=new Inner(); // 不能直接脱离外部类创建内部类的对象
+            //要想创建内部类的对象的时候可以借助外部类去创建
+            Outer.Inner in=out.new Inner();    //特别特殊的一个语法
+            System.out.println(in.b);
+            in.m2();   //内部类可以直接访问外部类对象
+            //System.out.println("out.a")   Error 封装依旧有效。无法从外部直接访问
+            
+            System.out.println(Outer.c) // 外部类的静态属性
+                //外部类的静态方法
+                Outer.m1();
+        }
+    }
+    
+    
+    class Outer{
+        static int c;
+        private int a; //Outer类创建对象的时候才可以在内存中开辟空间
+        //
+        public static void m1(){}
+        class Inner{
+            int b;
+            public void m2(){
+                System.out.println("Inner method m2"+a);//内部类可以访问外部类私有成员
+            }
+        }
+    }
+    ```
+
+  - 
+
+- 成员内部类
+
+  1. 实现类的内部定义，与实例变量，实例方法同级别的类
+
+  2. 外部类的一个实例部分，创建内部类的对象时，必须依赖外部类存在。
+
+  3. 当外部类，内部类存在重名属性时，会优先访问内部类属性
+
+  4. 成员内部类不能定义静态成员。    // 因为静态意味着 是 全类共享，类加载时已经存在了。  
+
+      验证3:
+
+     ```java
+     class Outer{
+         private int a=10; //Outer类创建对象的时候才可以在内存中开辟空间
+         //
+         class Inner{
+             int a=20;
+             public void m2(){
+                 int a=30;
+               System.out.println("Inner method m2"+a);// 内部类访问局部变量 a=30；
+               System.out.println("Inner method m2"+this.a);//内部类访问内部类实例变量a=20；
+               System.out.println("Inner method m2"+Outer.this.a);//极其罕见，内部类访问外部类实例变量 a=10；
+             } 
+         }
+     }
+     ```
+
+- 静态内部类
+
+  1. 不依赖外部类对象，可直接创建或通过类名访问，
+
+  2. 只能直接访问外部类的额静态成员
+
+     - Outer.Inner inner=new Outer.Inner();
+     -  Outer.Inner.show();
+
+  3. 静态内部类的静态属性可以直接用类名访问
+
+- 局部内部类
+
+  - 定义在外部类方法中，作用范围和创建对象范围仅限于当前方法。
+
+    ```java
+    //局部内部类实例：
+    public class TestLocalClass{
+        public static void main(String[] args){
+            Outer out=new Outer();
+            out.m1();     //实例方法用对象名点方法名来调
+            Outer.m2();   //静态方法用类名直接调
+        }
+    } 
+    
+    class Outer{
+        public void m1(){
+            String local="Hello" ;  // 局部变量的作用范围 从定义行到包含他的代码块儿结束// 局部变量是用完就被回收的
+            //  局部内部类只有在方法加载到它结束的过程是虚拟机认识它的，方法结束之后 虚拟机就不认识了
+            class Inner{
+                public void m3(){
+                    System.out.println(" Method M3()"); // 只有外部类的对象创建好，调外部类的实例方法 m1(); 的时候 才能打印这句话
+                }
+            }
+            Inner in = new Inner();
+            in.m3();    //调用局部内部类的m3方法
+        }
+        
+        public static void m2(){
+            
+        }
+    }
+    ```
+
+    - 局部内部类访问外部类党建方法中的局部变量是，因无法保障变量的生命周期与自身相拥，变量必须修饰为final 常量。
+
+      ```java
+      class Outer{
+          public void m1(){
+              String local="Hello" ; 
+              class Inner{
+                  int a=20;
+                  public void m3(){
+                      int a=30;
+                      System.out.println(" Method M3()"+this.a);  //局部内部类的实例属性用 this.a 来访问 这时候 a=20
+                      //要是在局部内部类的实例方法中访问外部类方法m1() 的局部只能有常量
+                      //因为局部内部类访问外部类党建方法中的局部变量是，因无法保障变量的生命周期与自身相拥，变量必须修饰为final 常量。
+                      System.out.println(local)；
+                  }
+              }
+              Inner in = new Inner();
+              in.m3();    
+          
+          public static void m2(){
+              
+          }
+      }
+      ```
+
+      解析上面为什么在外部类实例方法中的 local 为什么得是 常量的 的关键：
+
+      -    局部内部类的整个的使用范围在方法内部，作为一个类来讲，我们可以创建它的对象，对象在堆里，而 实例方法中的local是局部变量，局部变量在栈里，栈里和堆里的东西回收的时间不同，栈中内容会立刻回收，而堆里的东西要是不加人工干预的时候是内存空间不够了的时候才被回收，所以整个方法代码块儿执行完了的时候，局部变量local会被回收，而对象in 还没被回收，所以两个生命周期就不一样了。
+- 匿名内部类
